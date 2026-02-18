@@ -18,21 +18,14 @@ locals {
 resource "mongodbatlas_advanced_cluster" "this" {
   count = var.instance_size == "M0" || var.instance_size == "M2" || var.instance_size == "M5" ? 1 : 0
 
-  project_id             = mongodbatlas_project.this.id
-  name                   = var.cluster_name
-  cluster_type           = var.cluster_type
-  mongo_db_major_version = var.mongodb_version
-  backup_enabled         = false
+  project_id   = mongodbatlas_project.this.id
+  name         = var.cluster_name
+  cluster_type = var.cluster_type
 
   replication_specs = [{
-    num_shards = 1
     region_configs = [{
       electable_specs = {
         instance_size = var.instance_size
-        node_count    = var.instance_size == "M0" ? 1 : 2
-      }
-      auto_scaling = {
-        disk_gb_enabled = false
       }
       provider_name         = "TENANT"
       backing_provider_name = var.cloud_provider
@@ -41,14 +34,9 @@ resource "mongodbatlas_advanced_cluster" "this" {
     }]
   }]
 
-  advanced_configuration = null
-
-  # M0/M2/M5 limitations: ignore computed attributes
+  # M0/M2/M5 limitations: ignore all computed/changed attributes
   lifecycle {
-    ignore_changes = [
-      replication_specs,
-      advanced_configuration
-    ]
+    ignore_changes = all
   }
 }
 
